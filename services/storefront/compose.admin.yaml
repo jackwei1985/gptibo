@@ -1,0 +1,11 @@
+# Administrator identity without enabling an external mail provider.
+services:
+  api:
+    environment:
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?run npm run admin:setup first}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?run npm run admin:setup first}
+      ADMIN_TOTP_SECRET_FILE: /run/secrets/admin_totp
+    secrets: [admin_totp]
+secrets:
+  admin_totp:
+    file: ./.secrets/admin-totp

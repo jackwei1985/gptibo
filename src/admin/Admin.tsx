@@ -57,7 +57,7 @@ const views = [
   { id: 'plans', label: '商品与套餐', icon: Package }, { id: 'interest', label: '上线提醒', icon: Mail },
   { id: 'contacts', label: '联系方式', icon: MessageCircle }, { id: 'integrations', label: '服务接入', icon: Plug }, { id: 'partners', label: '代理管理', icon: Users }, { id: 'visitors', label: '访客统计', icon: ChartNoAxesCombined },
 ]
-type Session = { authenticated: boolean; configured: boolean; mailReady: boolean; username?: string }
+type Session = { authenticated: boolean; configured: boolean; mailReady: boolean; devMail?: boolean; username?: string }
 type Overview = { stats: { total: number; pending: number; active: number; completed: number; refund_amount: number; paid_amount: number }; interest: { total: number }; recent: ServerOrder[] }
 type Detail = { order: ServerOrder & { platformStatus: PlatformOrderStatus | null; rechargeCredential?: RechargeCredential }; events: { id: string; actor: string; action: string; note: string; to_status: string; created_at: number }[] }
 function SettlementBadge({ status }: { status?: 'pending' | 'paid' | null }) {
@@ -233,7 +233,7 @@ export default function Admin() {
       {sendHuman.widget}
       <label htmlFor="admin-email-code">邮箱验证码</label>
       <div className="admin-email-code-row"><Input id="admin-email-code" inputMode="numeric" autoComplete="one-time-code" placeholder="6 位邮箱验证码" value={emailCode} onChange={e => setEmailCode(e.target.value.replace(/\D/g, '').slice(0, 6))} disabled={busy || sending} required pattern="[0-9]{6}" minLength={6} maxLength={6} aria-describedby="admin-email-help" /><Button type="button" variant="outline" onClick={() => void sendCode()} disabled={!sendHuman.ready || busy || sending || cooldown > 0 || !username.trim() || !session.mailReady}>{sending ? '发送中…' : cooldown > 0 ? cooldown + ' 秒后重发' : '获取验证码'}</Button></div>
-      <p id="admin-email-help" className="admin-code-help">验证码发送至预设管理员邮箱，10 分钟内有效。</p>
+      <p id="admin-email-help" className="admin-code-help">{session.devMail ? <>本地开发收件箱已启用，验证码不会发送到真实邮箱。获取后在项目终端运行 <code>npm run admin:inbox</code> 查看，10 分钟内有效。</> : '验证码发送至预设管理员邮箱，10 分钟内有效。'}</p>
       {mailNotice && <p role="status" className="admin-code-help">{mailNotice}</p>}
       {!session.mailReady && <p role="alert" className="admin-code-help">邮箱验证服务尚未启用，暂时无法登录。</p>}
       <label htmlFor="admin-code">2FA 验证码</label>

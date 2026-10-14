@@ -1,0 +1,8 @@
+# Opt in only for local development; no email is sent externally.
+services:
+  api:
+    environment:
+      MAIL_ENABLED: "true"
+      DEV_MAIL_OUTBOX_DIR: /app/dev-outbox
+    volumes:
+      - ../../.admin-auth/outbox:/app/dev-outbox

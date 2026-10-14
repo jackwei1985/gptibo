@@ -180,7 +180,11 @@ func register(r *gin.Engine, s *store.Store, opts Options) {
 				fail(c, e)
 				return
 			}
-			c.JSON(200, gin.H{"challenge": id, "retryAfter": 60, "message": "若该账号可用，验证码将发送至对应邮箱。"})
+			message := "若该账号可用，验证码将发送至对应邮箱。"
+			if role == "admin" && a.DevelopmentMail() {
+				message = "若该账号可用，验证码已写入本机开发收件箱，请运行 npm run admin:inbox 查看。"
+			}
+			c.JSON(200, gin.H{"challenge": id, "retryAfter": 60, "message": message})
 		}
 	}
 	verify := func(role string) gin.HandlerFunc {
@@ -243,6 +247,7 @@ func register(r *gin.Engine, s *store.Store, opts Options) {
 			out := gin.H{"authenticated": e == nil, "mailReady": a.Ready()}
 			if role == "admin" {
 				out["configured"] = a.AdminConfigured()
+				out["devMail"] = a.DevelopmentMail()
 				if e == nil {
 					out["username"] = a.Username()
 				}

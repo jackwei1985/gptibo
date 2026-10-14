@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "admin:setup": "node scripts/admin-setup.mjs",
+    "admin:inbox": "node scripts/admin-inbox.mjs",
     "dev": "vite",
     "build": "npm run emails:build && tsc -b && tsc -p tsconfig.worker.json && vite build",
     "lint": "oxlint",

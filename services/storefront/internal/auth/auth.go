@@ -105,6 +105,13 @@ func (a *Service) AdminConfigured() bool {
 	return a != nil && len(a.key) == 32 && a.cfg.AdminUsername != "" && security.ValidTOTP(a.cfg.AdminTOTP)
 }
 func (a *Service) Username() string { return a.cfg.AdminUsername }
+func (a *Service) DevelopmentMail() bool {
+	if a == nil {
+		return false
+	}
+	sender, ok := a.cfg.Sender.(interface{ DevelopmentMail() bool })
+	return ok && sender.DevelopmentMail()
+}
 func (a *Service) version(role, subject string, version int64) string {
 	value := fmt.Sprintf("%s:%s:%d", role, subject, version)
 	if role == "admin" {

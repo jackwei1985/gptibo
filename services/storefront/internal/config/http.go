@@ -144,6 +144,13 @@ func LoadHTTP() (HTTP, error) {
 		if h.Auth.Secret == "" {
 			return h, errors.New("AUTH_SECRET required before enabling mail")
 		}
+		if directory := os.Getenv("DEV_MAIL_OUTBOX_DIR"); directory != "" {
+			if !local || os.Getenv("RESEND_API_KEY") != "" || os.Getenv("RESEND_API_KEY_FILE") != "" {
+				return h, errors.New("development mail requires a loopback PUBLIC_ORIGIN and no Resend credentials")
+			}
+			h.Auth.Sender, e = mailer.NewLocalOutbox(directory)
+			return h, e
+		}
 		key, e := Secret("RESEND_API_KEY")
 		if e != nil {
 			return h, e

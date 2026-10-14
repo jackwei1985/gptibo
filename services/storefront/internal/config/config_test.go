@@ -4,8 +4,44 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+func TestDevelopmentMailRequiresLoopbackAndExplicitOptIn(t *testing.T) {
+	for _, key := range []string{"AUTH_SECRET_FILE", "RESEND_API_KEY", "RESEND_API_KEY_FILE", "MIGRATION_REHEARSAL", "ADMIN_USERNAME", "ADMIN_EMAIL", "ADMIN_TOTP_SECRET", "ADMIN_TOTP_SECRET_FILE"} {
+		t.Setenv(key, "")
+	}
+	t.Setenv("AUTH_SECRET", strings.Repeat("a1", 32))
+	t.Setenv("PUBLIC_ORIGIN", "http://127.0.0.1:8093")
+	t.Setenv("MAIL_ENABLED", "false")
+	t.Setenv("DEV_MAIL_OUTBOX_DIR", t.TempDir())
+	if h, err := LoadHTTP(); err != nil || h.Auth.Sender != nil {
+		t.Fatal("development mail enabled without opt-in", err)
+	}
+	t.Setenv("MAIL_ENABLED", "true")
+	if h, err := LoadHTTP(); err != nil || h.Auth.Sender == nil {
+		t.Fatal("explicit local development mail unavailable", err)
+	}
+	for _, origin := range []string{"https://shop.example.test", "https://127.0.0.1.example.test"} {
+		t.Setenv("PUBLIC_ORIGIN", origin)
+		if _, err := LoadHTTP(); err == nil {
+			t.Fatal("development mailbox allowed outside loopback")
+		}
+	}
+	t.Setenv("PUBLIC_ORIGIN", "http://127.0.0.1:8093")
+	for _, key := range []string{"RESEND_API_KEY", "RESEND_API_KEY_FILE"} {
+		t.Setenv(key, "configured-provider")
+		if _, err := LoadHTTP(); err == nil {
+			t.Fatal("development mailbox allowed with external mail credentials")
+		}
+		t.Setenv(key, "")
+	}
+	t.Setenv("DEV_MAIL_OUTBOX_DIR", filepath.Join(t.TempDir(), "missing"))
+	if _, err := LoadHTTP(); err == nil {
+		t.Fatal("missing mailbox directory accepted")
+	}
+}
 
 func TestSecretFileAndConflictingSources(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "secret")

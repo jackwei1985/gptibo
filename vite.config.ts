@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     host: '127.0.0.1', port: 5173,
+    fs: { deny: ['.env', '.env.*', '*.{crt,pem,key,p12,pfx,cer,der}', '.npmrc', '.yarnrc.yml', '**/.git/**', '**/.admin-auth/**', '**/.secrets/**'] },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8787', changeOrigin: true,
